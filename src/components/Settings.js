@@ -288,6 +288,29 @@ export function render() {
             }
         }
 
+        // Admin PIN Lock Logic
+        const adminArea = document.getElementById('admin-area');
+        const adminLock = document.getElementById('admin-lock');
+        const adminUnlockBtn = document.getElementById('admin-unlock-btn');
+        const adminPinInput = document.getElementById('admin-pin-input');
+
+        if (adminUnlockBtn && adminPinInput) {
+            adminUnlockBtn.onclick = () => {
+                const entered = adminPinInput.value;
+                const stored = localStorage.getItem('family_app_pin') || '0000';
+                if (entered === stored) {
+                    adminLock.style.display = 'none';
+                    if (adminArea) {
+                        adminArea.style.display = 'block';
+                        adminArea.classList.add('fade-in');
+                    }
+                } else {
+                    alert('PINが違います🙅‍♂️');
+                    adminPinInput.value = '';
+                }
+            }
+        }
+
     }, 0)
 
     // Helper to render icon (emoji or image)
@@ -520,32 +543,6 @@ export function render() {
             </div>
        </div>
 
-       <script>
-        // Inline script injected by render for the lock logic
-        setTimeout(() => {
-             const adminArea = document.getElementById('admin-area');
-             const adminLock = document.getElementById('admin-lock');
-             const btn = document.getElementById('admin-unlock-btn');
-             const input = document.getElementById('admin-pin-input');
-             console.log("Setting up lock listener");
-             
-             if(btn) {
-                 btn.onclick = () => {
-                     const entered = input.value;
-                     // We grab the pin from local storage directly here or assume the stored one
-                     const stored = localStorage.getItem('family_app_pin') || '0000';
-                     if(entered === stored) {
-                         adminLock.style.display = 'none';
-                         adminArea.style.display = 'block';
-                         adminArea.classList.add('fade-in');
-                     } else {
-                         alert('PINが違います🙅‍♂️');
-                         input.value = '';
-                     }
-                 }
-             }
-        }, 100);
-       </script>
-    </div>
+     </div>
   `
 }

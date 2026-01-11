@@ -227,46 +227,59 @@ export function render() {
             }
         }
 
-        // Firebase Config Save
-        const firebaseBtn = document.querySelector('#save-firebase-btn')
+        // Global Firebase Save Handler
+        window.saveFirebaseConfig = () => {
+            const input = document.querySelector('#firebase-config-input');
+            const status = document.querySelector('#firebase-status');
+
+            try {
+                let jsonStr = input.value.trim();
+                // Fix common copy-paste errors (remove const ... = and ;)
+                if (jsonStr.startsWith('const')) {
+                    jsonStr = jsonStr.substring(jsonStr.indexOf('{'));
+                }
+                if (jsonStr.endsWith(';')) {
+                    jsonStr = jsonStr.substring(0, jsonStr.length - 1);
+                }
+
+                if (!jsonStr) {
+                    if (confirm('同期設定を削除してオフラインモードに戻しますか？')) {
+                        localStorage.removeItem('firebase_config');
+                        window.location.reload();
+                    }
+                    return;
+                }
+
+                // Validate JSON
+                // Allow loose JSON (keys without quotes) by using a loose parser or simple eval (safe enough here for local config)
+                // But standard JSON.parse is stricter. Let's try to fix keys if missing quotes.
+                // Actually, Firebase console gives valid JSON-like object but keys might not be quoted in some views?
+                // Usually it gives valid JS object. JSON.parse requires quotes.
+                // Let's use new Function to parse JS object string securely-ish
+                const config = (new Function(`return ${jsonStr}`))();
+
+                if (!config.apiKey || !config.projectId) {
+                    alert('⚠️ apiKey または projectId が見つかりません。正しいコードか確認してください。');
+                    return;
+                }
+
+                localStorage.setItem('firebase_config', JSON.stringify(config, null, 2));
+                alert('設定を保存しました！\nアプリを再起動して接続テストを行います。🚀');
+                window.location.reload();
+
+            } catch (e) {
+                console.error(e);
+                alert('❌ エラー: 設定コードを正しく読み取れませんでした。\n{ ... } の部分だけを貼り付けてください。');
+            }
+        };
+
+        // Init Firebase Input Value
         const firebaseInput = document.querySelector('#firebase-config-input')
         const firebaseStatus = document.querySelector('#firebase-status')
-
-        // Init value
         const currentFirebaseConfig = localStorage.getItem('firebase_config')
         if (firebaseInput && currentFirebaseConfig) {
             firebaseInput.value = currentFirebaseConfig
             if (firebaseStatus) firebaseStatus.textContent = '✅ 設定済み (再起動後に有効になります)'
-        }
-
-        if (firebaseBtn) {
-            firebaseBtn.onclick = () => {
-                try {
-                    const jsonStr = firebaseInput.value.trim()
-                    if (!jsonStr) {
-                        // Clear
-                        if (confirm('同期設定を削除してオフラインモードに戻しますか？')) {
-                            localStorage.removeItem('firebase_config')
-                            window.location.reload()
-                        }
-                        return
-                    }
-
-                    // Validate JSON
-                    const config = JSON.parse(jsonStr)
-                    if (!config.apiKey || !config.projectId) {
-                        alert('⚠️ 不正な設定形式です。\napiKey や projectId が含まれているか確認してください。')
-                        return
-                    }
-
-                    localStorage.setItem('firebase_config', JSON.stringify(config, null, 2))
-                    alert('設定を保存しました！\nアプリを再起動して接続テストを行います。🚀')
-                    window.location.reload()
-
-                } catch (e) {
-                    alert('❌ エラー: 正しいJSON形式で入力してください。\n(カンマの漏れやカッコの対応数など)')
-                }
-            }
         }
 
         // App Name Save
@@ -468,7 +481,7 @@ export function render() {
              
             <textarea id="firebase-config-input" placeholder='{"apiKey": "...", "projectId": "..."}' style="width: 100%; height: 100px; padding: 10px; font-family: monospace; font-size: 0.8rem; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;"></textarea>
             <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button id="save-firebase-btn" class="btn btn-primary" style="padding: 0 15px; font-size: 0.8rem;">設定を保存＆テスト</button>
+                <button id="save-firebase-btn" onclick="saveFirebaseConfig()" class="btn btn-primary" style="padding: 0 15px; font-size: 0.8rem;">設定を保存＆テスト</button>
             </div>
              <p id="firebase-status" style="margin-top:5px; font-size: 0.7rem; color: #888; text-align: right;">※まだ設定されていません</p>
            </div>

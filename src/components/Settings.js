@@ -295,29 +295,6 @@ export function render() {
             }
         }
 
-        // Admin PIN Lock Logic
-        const adminArea = document.getElementById('admin-area');
-        const adminLock = document.getElementById('admin-lock');
-        const adminUnlockBtn = document.getElementById('admin-unlock-btn');
-        const adminPinInput = document.getElementById('admin-pin-input');
-
-        if (adminUnlockBtn && adminPinInput) {
-            adminUnlockBtn.onclick = () => {
-                const entered = adminPinInput.value;
-                const stored = localStorage.getItem('family_app_pin') || '0000';
-                if (entered === stored) {
-                    adminLock.style.display = 'none';
-                    if (adminArea) {
-                        adminArea.style.display = 'block';
-                        adminArea.classList.add('fade-in');
-                    }
-                } else {
-                    alert('PINが違います🙅‍♂️');
-                    adminPinInput.value = '';
-                }
-            }
-        }
-
     }, 0)
 
     // Helper to render icon (emoji or image)
@@ -450,8 +427,8 @@ export function render() {
          </div>
        </div>
        
-       <!-- Restricted Area: Admin Settings -->
-       <div id="admin-area" style="display: none;">
+       <!-- Restricted Area: Admin Settings (Always Visible Now) -->
+       <div id="admin-area" class="fade-in">
            <!-- API Key Settings -->
            <div class="glass-panel" style="padding: var(--space-md); margin-bottom: var(--space-md); background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);">
              <h3 style="font-size: 1rem; margin-bottom: 10px; color: var(--tertiary-accent);">🤖 AI設定 (開発者用)</h3>
@@ -538,18 +515,6 @@ export function render() {
         input:checked + .slider { background-color: var(--primary-accent); }
         input:checked + .slider:before { transform: translateX(24px); }
     </style>
-       <!-- Admin Lock Overlay -->
-       <div id="admin-lock">
-            <div class="glass-panel" style="padding: var(--space-md); text-align: center; background: #fafafa;">
-                <h3 style="font-size: 1rem; margin-bottom: 10px;">🔒 管理者設定</h3>
-                <p style="font-size: 0.8rem; color: #888; margin-bottom: 10px;">APIキーやデータ削除などの高度な設定を表示するにはPIN認証が必要です。</p>
-                <div style="display: flex; justify-content: center; gap: 5px;">
-                     <input type="password" id="admin-pin-input" maxlength="4" placeholder="PIN" style="width: 80px; padding: 8px; text-align: center; font-size: 1.2rem; letter-spacing: 5px;">
-                     <button id="admin-unlock-btn" class="btn" style="padding: 0 15px;">解除</button>
-                </div>
-            </div>
-       </div>
-
      </div>
   `
 }

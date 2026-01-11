@@ -227,58 +227,52 @@ export function render() {
             }
         }
 
-        // Global Event Delegation for Firebase Save
-        // Using document level listener to guarantee we catch the click on dynamically created elements
-        document.addEventListener('click', (e) => {
-            if (e.target && e.target.id === 'save-firebase-btn') {
-                console.log('Firebase save button clicked');
+        // Global Firebase Save Handler (Primitive & Robust)
+        window.saveFirebaseConfig = function () {
+            console.log('Firebase save button clicked');
+            const input = document.querySelector('#firebase-config-input');
 
-                const input = document.querySelector('#firebase-config-input');
+            if (!input) {
+                alert('エラー: 入力欄が見つかりません');
+                return;
+            }
 
-                if (!input) {
-                    alert('エラー: 入力欄が見つかりません');
+            try {
+                let jsonStr = input.value.trim();
+
+                if (!jsonStr) {
+                    if (confirm('同期設定を削除してオフラインモードに戻しますか？')) {
+                        localStorage.removeItem('firebase_config');
+                        window.location.reload();
+                    }
                     return;
                 }
 
-                try {
-                    let jsonStr = input.value.trim();
-
-                    if (!jsonStr) {
-                        if (confirm('同期設定を削除してオフラインモードに戻しますか？')) {
-                            localStorage.removeItem('firebase_config');
-                            window.location.reload();
-                        }
-                        return;
-                    }
-
-                    // Pre-cleaning
-                    if (jsonStr.startsWith('const')) {
-                        jsonStr = jsonStr.substring(jsonStr.indexOf('{'));
-                    }
-                    if (jsonStr.endsWith(';')) {
-                        jsonStr = jsonStr.substring(0, jsonStr.length - 1);
-                    }
-
-                    console.log('Parsing JSON:', jsonStr);
-
-                    // Use Function constructor for loose parsing
-                    const config = (new Function(`return ${jsonStr}`))();
-
-                    if (!config.apiKey || !config.projectId) {
-                        alert('⚠️ 不正な形式です。\napiKey または projectId が見つかりません。');
-                        return;
-                    }
-
-                    localStorage.setItem('firebase_config', JSON.stringify(config, null, 2));
-                    alert('✅ 設定を保存しました！\nOKを押すとアプリを再起動します。');
-                    window.location.reload();
-
-                } catch (err) {
-                    console.error('Config parsing error:', err);
-                    alert('❌ 設定の読み込みに失敗しました。\nコードを正しく貼り付けてください。\n(エラー: ' + err.message + ')');
+                // Pre-cleaning
+                if (jsonStr.startsWith('const')) {
+                    jsonStr = jsonStr.substring(jsonStr.indexOf('{'));
                 }
+                if (jsonStr.endsWith(';')) {
+                    jsonStr = jsonStr.substring(0, jsonStr.length - 1);
+                }
+
+                // Use Function constructor for loose parsing
+                const config = (new Function(`return ${jsonStr}`))();
+
+                if (!config.apiKey || !config.projectId) {
+                    alert('⚠️ 不正な形式です。\napiKey または projectId が見つかりません。');
+                    return;
+                }
+
+                localStorage.setItem('firebase_config', JSON.stringify(config, null, 2));
+                alert('✅ 設定を保存しました！\nOKを押すとアプリを再起動します。');
+                window.location.reload();
+
+            } catch (err) {
+                console.error('Config parsing error:', err);
+                alert('❌ エラーが発生しました。\nコードの貼り付けミスがないか確認してください。\n\n詳細: ' + err.message);
             }
-        });
+        };
 
         // Init Firebase Input Value
         const firebaseInput = document.querySelector('#firebase-config-input')
@@ -488,7 +482,7 @@ export function render() {
              
             <textarea id="firebase-config-input" placeholder='{"apiKey": "...", "projectId": "..."}' style="width: 100%; height: 100px; padding: 10px; font-family: monospace; font-size: 0.8rem; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;"></textarea>
             <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button id="save-firebase-btn" class="btn btn-primary" style="padding: 0 15px; font-size: 0.8rem;">設定を保存＆テスト</button>
+                <button id="save-firebase-btn" onclick="saveFirebaseConfig()" class="btn btn-primary" style="padding: 0 15px; font-size: 0.8rem;">設定を保存＆テスト</button>
             </div>
              <p id="firebase-status" style="margin-top:5px; font-size: 0.7rem; color: #888; text-align: right;">※まだ設定されていません</p>
            </div>

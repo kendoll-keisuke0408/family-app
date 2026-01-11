@@ -2,7 +2,7 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-    base: '/family-app/',
+    base: './',
     build: {
         outDir: 'dist'
     }

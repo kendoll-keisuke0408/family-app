@@ -167,13 +167,20 @@ export function render() {
             }
         }
 
-        // 3. Invite Link Simulation
+        // 3. Invite Link (Copy current URL)
         const inviteBtn = document.querySelector('#invite-btn')
         if (inviteBtn) {
-            inviteBtn.onclick = () => {
-                // Simulate link copy
-                const dummyLink = `https://family-app.local/invite?code=${Math.random().toString(36).substring(7)}`
-                alert(`招待リンクをコピーしました！🔗\n\n${dummyLink}\n\n(これを家族に送ってね)`)
+            inviteBtn.onclick = async () => {
+                const url = window.location.href.split('?')[0]; // Remove query params if any
+                const textToCopy = `家族アプリ「Family Sync」の招待です🏠\n\n${url}\n\n(設定済みのFirebaseキーも共有してね)`;
+
+                try {
+                    await navigator.clipboard.writeText(textToCopy);
+                    alert(`招待メッセージをコピーしました！📋\nLINEなどで家族に送ってあげてください。`);
+                } catch (err) {
+                    // Fallback for some browsers or insecure contexts
+                    prompt('コピーして家族に送ってね👇', textToCopy);
+                }
             }
         }
 

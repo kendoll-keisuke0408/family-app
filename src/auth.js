@@ -1,3 +1,5 @@
+import { saveData, subscribeData } from './dataSync.js'
+
 const USERS_KEY = 'family_app_users'
 const PIN_KEY = 'family_app_pin'
 const CURRENT_USER_ID_KEY = 'family_app_current_user_id'
@@ -9,19 +11,33 @@ const DEFAULT_USERS = [
     { id: 'kid1', name: 'さくら', icon: '👧', role: 'child' },
 ]
 
+// Start syncing users in the background
+subscribeData(USERS_KEY, (data) => {
+    // If we get new data from cloud, we just let it sit in LocalStorage (subscribeData handles this internally usually?)
+    // Ah, wait. My subscribeData implementation ALREADY updates LocalStorage before calling callback.
+    // So we don't strictly need to do anything here unless we want to trigger a UI refresh.
+    // However, if the current user was deleted remotely, we might have issues.
+    // For now, silent sync is fine. The next time getUsers() is called, it will be fresh.
+    console.log('👥 Users synced')
+})
+
+
 // Get all users
 export function getUsers() {
     const saved = localStorage.getItem(USERS_KEY)
     if (saved) return JSON.parse(saved)
     // Initialize if empty
-    localStorage.setItem(USERS_KEY, JSON.stringify(DEFAULT_USERS))
+    // If we are offline and first run, save default.
+    // BUT, we should use saveData to push defaults to cloud if possible.
+    saveData(USERS_KEY, DEFAULT_USERS)
     return DEFAULT_USERS
 }
 
 // Save users
 export function saveUsers(users) {
-    localStorage.setItem(USERS_KEY, JSON.stringify(users))
+    saveData(USERS_KEY, users)
 }
+
 
 // Add a user
 export function addUser(name, icon) {

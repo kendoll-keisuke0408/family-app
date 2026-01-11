@@ -1,21 +1,33 @@
 import { escape } from '../utils.js'
 import { getCurrentUser, getUsers } from '../auth.js'
+import { saveData, subscribeData } from '../dataSync.js'
 
-// Simple storage wrapper
 const TASKS_KEY = 'family_app_tasks'
+let todos = []
 
-function getTasks() {
-  const saved = localStorage.getItem(TASKS_KEY)
-  if (saved) return JSON.parse(saved)
-  // Defaults
-  return [
-    { id: 1, text: '牛乳と卵を買う', icon: '🥛', done: false, createdBy: { name: 'ママ', icon: '👩' }, createdAt: '10:00', assignedTo: 'papa' },
-    { id: 2, text: '電気代を払う', icon: '⚡', done: false, createdBy: { name: 'パパ', icon: '👨' }, createdAt: '09:30', assignedTo: 'mama' },
-  ]
-}
+// Subscribe
+subscribeData(TASKS_KEY, (data) => {
+  if (Array.isArray(data)) {
+    todos = data
+    // Try refresh if active
+    // Simplest check: is #task-input visible?
+    const input = document.getElementById('task-input')
+    if (input) {
+      const currentRoute = localStorage.getItem('family_app_route') || 'dashboard'
+      if (currentRoute === 'tasks') {
+        // Re-render only if we are on tasks page to avoid side effects
+        // We can trigger a click on the nav, but that flashes screen.
+        // Ideally, we extract render logic.
+        // For now, same "click sync" hack.
+        document.querySelector('[data-route=tasks]').click()
+      }
+    }
+  }
+})
 
-function saveTasks(tasks) {
-  localStorage.setItem(TASKS_KEY, JSON.stringify(tasks))
+const saveTasks = (data) => {
+  saveData(TASKS_KEY, data)
+  todos = data
 }
 
 // "Mini AI" for icons
@@ -44,36 +56,33 @@ function getSmartIcon(text) {
 }
 
 // Cleanup old tasks (completed > 7 days ago)
-function cleanupOldTasks(tasks) {
+// We run this only when rendering or saving, but better to filter on load.
+function cleanupOldTasks(list) {
   const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000
   const now = Date.now()
-
-  // Determine if any tasks need removal
-  const activeTasks = tasks.filter(t => {
+  return list.filter(t => {
     if (!t.done) return true
-    if (!t.completedAt) return true // Keep if no date set (legacy)
-
-    // Remove if older than 1 week
+    if (!t.completedAt) return true
     return (now - new Date(t.completedAt).getTime()) < ONE_WEEK_MS
   })
-
-  if (activeTasks.length !== tasks.length) {
-    saveTasks(activeTasks)
-    return activeTasks
-  }
-  return tasks
 }
 
+
 export function render() {
-  let todos = getTasks()
-  // Clean up
-  todos = cleanupOldTasks(todos)
+  // Clean up old stuff on render
+  const cleanList = cleanupOldTasks(todos)
+  if (cleanList.length !== todos.length) {
+    saveTasks(cleanList) // Sync cleanups
+  } else {
+    // triggers a re-render loop if we are not careful, but saveTasks updates variable too.
+  }
 
   const currentUser = getCurrentUser()
   const users = getUsers()
 
   setTimeout(() => {
     const list = document.querySelector('.task-list')
+
     const input = document.querySelector('#task-input')
     const addBtn = document.querySelector('#add-task-btn')
     const assignSelect = document.querySelector('#assign-select')

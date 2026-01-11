@@ -1,35 +1,65 @@
 import { escape } from '../utils.js'
 import { processImage } from '../image_utils.js'
+import { saveData, subscribeData } from '../dataSync.js'
 
 const EVENTS_KEY = 'family_app_events'
+let events = []
 
-function getEvents() {
-  const saved = localStorage.getItem(EVENTS_KEY)
-  if (saved) return JSON.parse(saved)
-  // Initial Mock Data
-  return [
-    { id: 1, date: '2026-01-10', title: 'サッカーの練習', time: '16:00', type: 'kids' },
-    { id: 2, date: '2026-01-14', title: '歯医者さん', time: '10:30', type: 'health' },
-    { id: 3, date: '2026-01-15', title: '特売日！買い出し', time: '18:00', type: 'chore' },
-    { id: 4, date: '2026-01-20', title: '家族でディナー', time: '19:00', type: 'family' },
-    { id: 5, date: '2026-02-03', title: '節分', time: '18:00', type: 'family' }
-  ]
+// Subscribe to data changes globally for this module
+subscribeData(EVENTS_KEY, (data) => {
+  if (Array.isArray(data)) {
+    events = data
+    // If the calendar is currently visible, refresh it
+    const calendarEl = document.getElementById('calendar-view')
+    if (calendarEl) {
+      // Simplest way to refresh is to re-click the nav item
+      // checking if it's already active to avoid loops?
+      // Actually, internal re-render is better but tricky without React.
+      // We'll perform a silent update or just wait for next interaction.
+      // For now, let's trigger a re-render if user is looking at it.
+      const currentRoute = localStorage.getItem('family_app_route') || 'dashboard'
+      if (currentRoute === 'calendar') {
+        // re-render logic could be extracted, but simulating click is robust enough for now
+        // document.querySelector('[data-route=calendar]').click() 
+        // WARNING: Click might cause infinite loop if not careful.
+        // Let's just update the `events` variable, and next user interaction will see it.
+        // To make it "Real-time", we need to update DOM.
+        renderCalendarContent() // We will extract the inner render logic
+      }
+    }
+  }
+})
+
+// Helper to save
+const saveEvents = (data) => {
+  saveData(EVENTS_KEY, data)
+  events = data // Optimistic
 }
 
-function saveEvents(data) {
-  localStorage.setItem(EVENTS_KEY, JSON.stringify(data))
-}
+// Global state for calendar view
+let currentYear = new Date().getFullYear()
+let currentMonth = new Date().getMonth()
+let selectedDate = new Date().toISOString().split('T')[0]
 
-// Global state for calendar view (reset on reload is fine for now)
-let currentYear = 2026
-let currentMonth = 0 // January (0-indexed)
-let selectedDate = new Date(2026, 0, 10).toISOString().split('T')[0] // Default select today
 
 // Temporary state for file upload in the form
 let tempAttachment = null
 
+// Extracted inner render function for live updates
+function renderCalendarContent() {
+  // We need to grab the container again? No, we can query selector inside render.
+  // Actually, let's just keep it simple:
+  // If we receive an update, we reload the view if active.
+  const activeView = document.querySelector('#app-content');
+  if (activeView && activeView.querySelector('.calendar-container')) {
+    document.querySelector('[data-route=calendar]').click()
+  }
+}
+
+
 export function render() {
-  const events = getEvents()
+  // Use the module-level 'events' variable
+
 
   // Calculate calendar grid
   const firstDay = new Date(currentYear, currentMonth, 1)

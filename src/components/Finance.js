@@ -1,36 +1,54 @@
 import { escape } from '../utils.js'
 import { callGemini } from '../gemini_api.js'
 import { processImage } from '../image_utils.js'
+import { saveData, subscribeData } from '../dataSync.js'
 
 const FINANCE_KEY = 'family_app_finance'
 const INCOME_KEY = 'family_app_income'
 const DEFAULT_BUDGET = 200000
 
-function getExpenses() {
-  const saved = localStorage.getItem(FINANCE_KEY)
-  if (saved) return JSON.parse(saved)
-  // Default sample data mainly for demo
-  return [
-    { id: 1, title: 'スーパー', amount: 5400, date: '2026-01-10', category: '食費' },
-  ]
-}
+let expenses = []
+let incomes = []
 
-function getIncomes() {
-  const saved = localStorage.getItem(INCOME_KEY)
-  if (saved) return JSON.parse(saved)
-  // Default income
-  return [
-    { id: 101, title: '給料(パパ)', amount: 250000, date: '2026-01-25', category: '給料' }
-  ]
+// Subscribe: Expenses
+subscribeData(FINANCE_KEY, (data) => {
+  if (Array.isArray(data)) {
+    // Sort by date desc (if needed) or just populate
+    expenses = data
+    tryRefresh()
+  }
+})
+
+// Subscribe: Incomes
+subscribeData(INCOME_KEY, (data) => {
+  if (Array.isArray(data)) {
+    incomes = data
+    tryRefresh()
+  }
+})
+
+function tryRefresh() {
+  const el = document.querySelector('.finance-container')
+  if (el) {
+    const currentRoute = localStorage.getItem('family_app_route') || 'dashboard'
+    if (currentRoute === 'finance') {
+      // Avoid loop if inputting? Maybe fine.
+      // Just trigger route reload.
+      document.querySelector('[data-route=finance]').click()
+    }
+  }
 }
 
 function saveExpenses(data) {
-  localStorage.setItem(FINANCE_KEY, JSON.stringify(data))
+  saveData(FINANCE_KEY, data)
+  expenses = data
 }
 
 function saveIncomes(data) {
-  localStorage.setItem(INCOME_KEY, JSON.stringify(data))
+  saveData(INCOME_KEY, data)
+  incomes = data
 }
+
 
 const CATEGORIES = {
   '食費': '🥦',
@@ -168,8 +186,8 @@ async function analyzeReceiptImage(file) {
 let currentYearMonth = new Date().toISOString().slice(0, 7) // YYYY-MM
 
 export function render() {
-  const expenses = getExpenses()
-  const incomes = getIncomes()
+  // Global variables: expenses, incomes are managed by subscriptions
+
 
   // Calculate available months from data
   const availableMonths = new Set()

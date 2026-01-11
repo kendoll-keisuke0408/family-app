@@ -220,6 +220,48 @@ export function render() {
             }
         }
 
+        // Firebase Config Save
+        const firebaseBtn = document.querySelector('#save-firebase-btn')
+        const firebaseInput = document.querySelector('#firebase-config-input')
+        const firebaseStatus = document.querySelector('#firebase-status')
+
+        // Init value
+        const currentFirebaseConfig = localStorage.getItem('firebase_config')
+        if (firebaseInput && currentFirebaseConfig) {
+            firebaseInput.value = currentFirebaseConfig
+            if (firebaseStatus) firebaseStatus.textContent = '✅ 設定済み (再起動後に有効になります)'
+        }
+
+        if (firebaseBtn) {
+            firebaseBtn.onclick = () => {
+                try {
+                    const jsonStr = firebaseInput.value.trim()
+                    if (!jsonStr) {
+                        // Clear
+                        if (confirm('同期設定を削除してオフラインモードに戻しますか？')) {
+                            localStorage.removeItem('firebase_config')
+                            window.location.reload()
+                        }
+                        return
+                    }
+
+                    // Validate JSON
+                    const config = JSON.parse(jsonStr)
+                    if (!config.apiKey || !config.projectId) {
+                        alert('⚠️ 不正な設定形式です。\napiKey や projectId が含まれているか確認してください。')
+                        return
+                    }
+
+                    localStorage.setItem('firebase_config', JSON.stringify(config, null, 2))
+                    alert('設定を保存しました！\nアプリを再起動して接続テストを行います。🚀')
+                    window.location.reload()
+
+                } catch (e) {
+                    alert('❌ エラー: 正しいJSON形式で入力してください。\n(カンマの漏れやカッコの対応数など)')
+                }
+            }
+        }
+
         // App Name Save
         const saveAppNameBtn = document.querySelector('#save-app-name-btn')
         if (saveAppNameBtn) {
@@ -404,6 +446,24 @@ export function render() {
                     <button id="delete-key-btn" style="background: #fff; border: 1px solid var(--danger); color: var(--danger); padding: 5px 10px; border-radius: 4px; cursor: pointer;">設定解除</button>
                  </div>
              `}
+           </div>
+
+           <!-- Cloud Sync Settings (Firebase) -->
+           <div class="glass-panel" style="padding: var(--space-md); margin-bottom: var(--space-md); background: linear-gradient(135deg, #e0f7fa 0%, #ffffff 100%);">
+             <h3 style="font-size: 1rem; margin-bottom: 10px; color: #00838f;">☁️ クラウド同期設定 (Firebase)</h3>
+             <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.5;">
+                家族全員でデータを同期するには、Firebase(無料データベース)の設定が必要です。<br>
+                <strong>設定方法:</strong><br>
+                1. <a href="https://console.firebase.google.com/" target="_blank" style="color: var(--primary-accent); text-decoration: underline;">Firebase Console</a>にアクセスしてプロジェクトを作成。<br>
+                2. 「ウェブアプリを追加」して出てくる設定コード(firebaseConfig)の中身(JSON)をコピー。<br>
+                3. 下のボックスに貼り付けて保存。<br>
+             </div>
+             
+            <textarea id="firebase-config-input" placeholder='{"apiKey": "...", "projectId": "..."}' style="width: 100%; height: 100px; padding: 10px; font-family: monospace; font-size: 0.8rem; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 10px;"></textarea>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button id="save-firebase-btn" class="btn btn-primary" style="padding: 0 15px; font-size: 0.8rem;">設定を保存＆テスト</button>
+            </div>
+             <p id="firebase-status" style="margin-top:5px; font-size: 0.7rem; color: #888; text-align: right;">※まだ設定されていません</p>
            </div>
     
            <!-- App Settings -->

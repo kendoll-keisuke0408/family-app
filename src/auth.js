@@ -73,6 +73,14 @@ export function getCurrentUser() {
 }
 
 export function setCurrentUser(id) {
+    // Update Last Login
+    let users = getUsers()
+    const idx = users.findIndex(u => u.id === id)
+    if (idx > -1) {
+        users[idx].lastLogin = new Date().toISOString()
+        saveUsers(users)
+    }
+
     localStorage.setItem(CURRENT_USER_ID_KEY, id)
     window.location.reload() // Reload to reflect changes globally
 }

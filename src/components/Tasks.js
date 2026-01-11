@@ -43,8 +43,32 @@ function getSmartIcon(text) {
   return '📝' // Default
 }
 
+// Cleanup old tasks (completed > 7 days ago)
+function cleanupOldTasks(tasks) {
+  const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000
+  const now = Date.now()
+
+  // Determine if any tasks need removal
+  const activeTasks = tasks.filter(t => {
+    if (!t.done) return true
+    if (!t.completedAt) return true // Keep if no date set (legacy)
+
+    // Remove if older than 1 week
+    return (now - new Date(t.completedAt).getTime()) < ONE_WEEK_MS
+  })
+
+  if (activeTasks.length !== tasks.length) {
+    saveTasks(activeTasks)
+    return activeTasks
+  }
+  return tasks
+}
+
 export function render() {
-  const todos = getTasks()
+  let todos = getTasks()
+  // Clean up
+  todos = cleanupOldTasks(todos)
+
   const currentUser = getCurrentUser()
   const users = getUsers()
 
@@ -119,8 +143,10 @@ export function render() {
         // If done, mark who did it/checked it
         if (todos[index].done) {
           todos[index].completedBy = { name: currentUser.name, icon: currentUser.icon }
+          todos[index].completedAt = new Date().toISOString()
         } else {
           delete todos[index].completedBy
+          delete todos[index].completedAt
         }
 
         saveTasks(todos)
@@ -138,24 +164,123 @@ export function render() {
         </div>
       </div>
 
+      <!-- Character Reminder Area -->
+      ${(() => {
+      const pendingCount = todos.filter(t => !t.done).length
+      let msg = ''
+      let mood = 'normal'
+      let ringColor = '#4ecdc4' // Cyan
+
+      if (pendingCount === 0) {
+        msg = `順調ですぞ！✨\nこの調子で、魔法のにちじょうを楽しみましょう！`
+        mood = 'happy'
+        ringColor = '#ffd700' // Gold
+      } else if (pendingCount >= 4) {
+        msg = `おやおや...タスクが${pendingCount}個も溜まってますぞ💦\n魔法の手で片付けてしまいましょう！`
+        mood = 'worry'
+        ringColor = '#ff6b6b' // Red
+      } else {
+        msg = `残りのタスクはあと${pendingCount}個です！\nササッと終わらせて、おやつタイムですぞ🍩`
+        mood = 'normal'
+        ringColor = '#4ecdc4'
+      }
+
+      return `
+          <div style="
+              background: #0f172a; 
+              border: 3px solid white; 
+              border-radius: 20px; 
+              padding: 20px; 
+              display: flex; 
+              gap: 20px; 
+              align-items: flex-start; 
+              margin-bottom: 20px;
+              box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+              position: relative;
+              overflow: hidden;
+          ">
+             <!-- Background Stars Effect (Simple CSS) -->
+             <div style="position: absolute; top: 10px; right: 20px; color: rgba(255,255,255,0.1); font-size: 2rem;">✦</div>
+             <div style="position: absolute; bottom: 10px; left: 100px; color: rgba(255,255,255,0.1); font-size: 1rem;">✨</div>
+
+             <!-- Avatar Section -->
+             <div style="flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                 <div style="
+                    width: 70px; 
+                    height: 70px; 
+                    border-radius: 50%; 
+                    border: 3px solid ${ringColor}; 
+                    padding: 3px;
+                    background: rgba(255,255,255,0.1);
+                 ">
+                    <img src="./magic_guide.png" style="
+                        width: 100%; 
+                        height: 100%; 
+                        border-radius: 50%; 
+                        object-fit: cover;
+                        background: #333;
+                    " onerror="this.src='https://placehold.co/70x70/1e293b/FFF?text=🧙‍♂️'">
+                 </div>
+                 <div style="
+                    font-size: 0.6rem; 
+                    font-weight: 800; 
+                    letter-spacing: 1px; 
+                    color: ${ringColor};
+                 ">GUIDE</div>
+             </div>
+
+             <!-- Text Section -->
+             <div style="flex: 1; z-index: 1;">
+                 <div style="
+                    display: flex; 
+                    justify-content: space-between; 
+                    align-items: center; 
+                    margin-bottom: 8px;
+                    border-bottom: 1px solid rgba(255,255,255,0.1);
+                    padding-bottom: 8px;
+                 ">
+                    <span style="color: #5eead4; font-weight: 800; font-size: 0.9rem;">Adviser</span>
+                    <span style="background: rgba(94, 234, 212, 0.2); color: #5eead4; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">Task: ${pendingCount}</span>
+                 </div>
+                 <div style="
+                    color: white; 
+                    font-weight: 700; 
+                    font-size: 0.95rem; 
+                    line-height: 1.6; 
+                    white-space: pre-wrap;
+                    font-family: 'M PLUS Rounded 1c';
+                    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+                 ">${msg}</div>
+             </div>
+          </div>
+          `
+    })()}
+
+
+       <div style="font-size: 0.75rem; color: var(--text-muted); text-align: right; margin-top: -10px; margin-bottom: 10px;">
+           ※完了から1週間経つと自動で消えるよ🧹
+      </div>
+
       <div class="glass-panel" style="padding: var(--space-md); margin-bottom: var(--space-lg); display: flex; flex-direction: column; gap: var(--space-sm);">
-        <div style="display: flex; gap: var(--space-sm);">
-            <select id="assign-select" style="width: auto; flex: 0 0 100px; font-size: 1rem; padding: 0.5rem;">
+        <div style="display: flex; gap: var(--space-sm); align-items: stretch; margin-bottom: 5px;">
+            <select id="assign-select" style="width: auto; flex: 0 0 90px; font-size: 0.9rem; padding: 0.5rem; border-radius: 8px; border: 2px solid #eee;">
                 <option value="everyone">🏠 全員</option>
                 ${users.map(u => `<option value="${u.id}">${u.icon} ${u.name}</option>`).join('')}
             </select>
-            <input id="task-input" type="text" placeholder="例: 牛乳を買う..." style="border: none; background: transparent; outline: none; font-size: 1rem; flex: 1;">
+            <input id="task-input" type="text" placeholder="例: 牛乳を買う..." style="border: 2px solid #eee; border-radius: 8px; font-size: 1rem; flex: 1; padding: 0.8rem;">
         </div>
-        <button id="add-task-btn" class="btn btn-primary" style="width: 100%; padding: 0.5rem;">追加して通知 🔔</button>
+        <button id="add-task-btn" class="btn btn-primary" style="width: 100%; border-radius: 12px; padding: 0.8rem;">
+            決定して追加 ✨
+        </button>
       </div>
 
       <div class="task-list" style="display: flex; flex-direction: column; gap: var(--space-sm);">
         ${todos.map(todo => {
-    const assignee = users.find(u => u.id === todo.assignedTo)
-    const assigneeIcon = assignee ? assignee.icon : '🏠'
-    const isForMe = todo.assignedTo === currentUser.id || todo.assignedTo === 'everyone'
+      const assignee = users.find(u => u.id === todo.assignedTo)
+      const assigneeIcon = assignee ? assignee.icon : '🏠'
+      const isForMe = todo.assignedTo === currentUser.id || todo.assignedTo === 'everyone'
 
-    return `
+      return `
               <div class="task-item glass-panel" data-id="${todo.id}" data-text="${escape(todo.text)}" style="
                     padding: var(--space-md); 
                     display: flex; 
@@ -196,17 +321,24 @@ export function render() {
                 
                 ${!todo.done ? `
                 <button class="delete-btn" style="
-                  background: none; 
+                  background: #ffebee; 
                   border: none; 
                   color: var(--danger); 
-                  opacity: 0.4; 
-                  padding: 0 10px; 
+                  width: 36px;
+                  height: 36px;
+                  border-radius: 50%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
                   cursor: pointer;
-                  font-size: 1.2rem;">✕</button>
+                  font-size: 1rem;
+                  flex-shrink: 0;
+                  transition: background 0.2s;
+                ">✕</button>
                 ` : ''}
               </div>
             `
-  }).join('')}
+    }).join('')}
       </div>
     </div>
   `

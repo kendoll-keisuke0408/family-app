@@ -80,7 +80,49 @@ export function render() {
         }
 
 
-        // 1. PIN Settings
+        // 0.5. Account Security Handlers
+        const emailInput = document.querySelector('#email-input')
+        const saveEmailBtn = document.querySelector('#save-email-btn')
+        if (saveEmailBtn && emailInput) {
+            saveEmailBtn.onclick = () => {
+                const email = emailInput.value.trim()
+                if (email) {
+                    updateUser(currentUser.id, { email: email })
+                    alert('メールアドレスを保存しました ✅')
+                }
+            }
+        }
+
+        const passwordForm = document.querySelector('#password-form')
+        if (passwordForm) {
+            passwordForm.onsubmit = (e) => {
+                e.preventDefault()
+                const newPass = passwordForm.querySelector('input[name="new-pass"]').value
+                const confirmPass = passwordForm.querySelector('input[name="confirm-pass"]').value
+
+                if (newPass && newPass === confirmPass) {
+                    // In a real app, never store plain text passwords! But for this local demo:
+                    updateUser(currentUser.id, { password: newPass })
+                    alert('パスワードを変更しました 🔐')
+                    passwordForm.reset()
+                } else {
+                    alert('パスワードが一致しません（または空です）❌')
+                }
+            }
+        }
+
+        const twoFactorToggle = document.querySelector('#2fa-toggle')
+        if (twoFactorToggle) {
+            twoFactorToggle.onchange = (e) => {
+                const isEnabled = e.target.checked
+                updateUser(currentUser.id, { twoFactorEnabled: isEnabled })
+                if (isEnabled) {
+                    alert('2段階認証をONにしました。\n(※現在はシミュレーションモードです)')
+                }
+            }
+        }
+
+        // 1. PIN Settings (App Lock)
         const pinForm = document.querySelector('#pin-form')
         if (pinForm) {
             pinForm.onsubmit = (e) => {
@@ -178,6 +220,20 @@ export function render() {
             }
         }
 
+        // App Name Save
+        const saveAppNameBtn = document.querySelector('#save-app-name-btn')
+        if (saveAppNameBtn) {
+            saveAppNameBtn.onclick = () => {
+                const name = document.querySelector('#app-name-input').value.trim()
+                if (name) {
+                    localStorage.setItem('family_app_name', name)
+                    // If empty, reset to default? No, just keep as is.
+                    alert(`アプリ名を「${name}」に変更しました！🏠`)
+                    window.location.reload()
+                }
+            }
+        }
+
         // Data Reset
         const resetBtn = document.querySelector('#reset-data-btn')
         if (resetBtn) {
@@ -203,6 +259,46 @@ export function render() {
     return `
     <div class="settings-container fade-in">
        <h2 style="margin-bottom: var(--space-md); text-align: center; color: var(--text-main);">設定・管理 ⚙️</h2>
+
+       <!-- My Account & Security -->
+       <div class="glass-panel" style="padding: var(--space-md); margin-bottom: var(--space-md); border-top: 5px solid var(--primary-accent);">
+         <h3 style="font-size: 1rem; margin-bottom: 20px;">👤 アカウント・セキュリティ設定</h3>
+         
+         <div style="display: flex; flex-direction: column; gap: 20px;">
+            <!-- Email Settings -->
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 5px;">メールアドレス</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="email" id="email-input" value="${currentUser.email || ''}" placeholder="sample@example.com" style="flex: 1; border: 2px solid #eee;">
+                    <button id="save-email-btn" class="btn" style="padding: 0 15px; font-size: 0.8rem; background: #eee;">保存</button>
+                </div>
+            </div>
+
+            <!-- Password Settings -->
+            <div style="border-top: 1px dashed #eee; padding-top: 20px;">
+                <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 15px;">パスワード設定</label>
+                <form id="password-form" style="display: flex; flex-direction: column; gap: 10px;">
+                    <input type="password" name="new-pass" placeholder="新しいパスワード" style="border: 2px solid #eee;">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="password" name="confirm-pass" placeholder="再入力" style="flex: 1; border: 2px solid #eee;">
+                        <button type="submit" class="btn btn-primary" style="padding: 0 15px; font-size: 0.8rem;">変更</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 2FA Settings -->
+            <div style="border-top: 1px dashed #eee; padding-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: 700; font-size: 0.95rem;">2段階認証 (2FA)</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">ログイン時に認証コードを要求する</div>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="2fa-toggle" ${currentUser.twoFactorEnabled ? 'checked' : ''}>
+                  <span class="slider round"></span>
+                </label>
+            </div>
+         </div>
+       </div>
 
        <!-- Family Management -->
        <div class="glass-panel" style="padding: var(--space-md); margin-bottom: var(--space-md); border-top: 5px solid var(--secondary-accent);">
@@ -311,19 +407,30 @@ export function render() {
            </div>
     
            <!-- App Settings -->
-       <div class="glass-panel" style="padding: var(--space-md); margin-bottom: var(--space-md);">
-         <h3 style="font-size: 1rem; margin-bottom: 15px;">📱 表示設定</h3>
-         <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
-            <div>
-                <div style="font-weight: 700;">スマホ版プレビュー</div>
-                <div style="font-size: 0.8rem; color: var(--text-muted);">PCでもスマホの画面を確認できます</div>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="mobile-preview-toggle">
-              <span class="slider round"></span>
-            </label>
-         </div>
-       </div>
+        <div class="glass-panel" style="padding: var(--space-md); margin-bottom: var(--space-md);">
+          <h3 style="font-size: 1rem; margin-bottom: 15px;">📱 表示設定</h3>
+          
+          <!-- App Name Setting -->
+          <div style="margin-bottom: 20px; border-bottom: 1px dashed #eee; padding-bottom: 15px;">
+              <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 5px;">アプリの名前 (表札)</label>
+              <div style="display: flex; gap: 10px;">
+                  <input type="text" id="app-name-input" value="${localStorage.getItem('family_app_name') || 'Family Sync'}" placeholder="〇〇家のホーム" style="flex: 1; border: 2px solid #eee; padding: 8px; border-radius: 4px;">
+                  <button id="save-app-name-btn" class="btn" style="padding: 0 15px; font-size: 0.8rem; background: var(--magic-gold); color: #8a6d3b;">変更</button>
+              </div>
+          </div>
+
+          <!-- Mobile Preview Toggle -->
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0;">
+             <div>
+                 <div style="font-weight: 700;">スマホ版プレビュー</div>
+                 <div style="font-size: 0.8rem; color: var(--text-muted);">PCでもスマホの画面を確認できます</div>
+             </div>
+             <label class="switch">
+               <input type="checkbox" id="mobile-preview-toggle">
+               <span class="slider round"></span>
+             </label>
+          </div>
+        </div>
 
        <!-- Danger Zone -->
            <div class="glass-panel" style="padding: var(--space-md); border: 2px solid var(--danger);">

@@ -44,7 +44,7 @@ function render() {
   app.innerHTML = `
     <!-- Header (Mobile User Info) -->
     <header class="app-header fade-in">
-      <div class="logo">Family Sync 🏠</div>
+      <div class="logo">${localStorage.getItem('family_app_name') || 'Family Sync 🏠'}</div>
       <div class="user-greeting" style="font-size: 0.9rem; color: var(--text-muted); font-weight: 700;">今日もいい日だね！☀️</div>
     </header>
 

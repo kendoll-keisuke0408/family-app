@@ -484,7 +484,9 @@ export function render() {
             <div style="display: flex; gap: 10px; justify-content: flex-end;">
                 <button id="save-firebase-btn" onclick="saveFirebaseConfig()" class="btn btn-primary" style="padding: 0 15px; font-size: 0.8rem;">設定を保存＆テスト</button>
             </div>
-             <p id="firebase-status" style="margin-top:5px; font-size: 0.7rem; color: #888; text-align: right;">※まだ設定されていません</p>
+             <p id="firebase-status" style="margin-top:5px; font-size: 0.7rem; color: #888; text-align: right;">
+                ${localStorage.getItem('firebase_config') ? '✅ 設定済み (再起動後に有効になります)' : '※まだ設定されていません'}
+             </p>
            </div>
     
            <!-- App Settings -->

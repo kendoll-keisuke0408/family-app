@@ -1,3 +1,19 @@
+// FORCE UNREGISTER SERVICE WORKER
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function (registrations) {
+    for (let registration of registrations) {
+      registration.unregister();
+    }
+  });
+}
+
+// Fallback setup link for stale caches
+const setupLink = document.createElement('a');
+setupLink.href = './setup.html?v=' + Date.now();
+setupLink.innerText = '⚙️ 設定画面が出ない場合はこちら';
+setupLink.style.cssText = 'position:fixed; top:10px; left:10px; z-index:99999; font-size:0.8rem; background:#ffeb3b; padding:8px 12px; border-radius:30px; text-decoration:none; color:black; font-weight:bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3);';
+document.body.appendChild(setupLink);
+
 import './style.css'
 // In a real build, we'd import simple modules. For now we use the ones we touched.
 import { render as renderDashboard } from './components/Dashboard.js'

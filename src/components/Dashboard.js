@@ -98,7 +98,9 @@ export function render() {
                     ${currentUser.icon.startsWith('data:') ? `<img src="${currentUser.icon}" style="width: 100%; height: 100%; object-fit: cover;">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">${currentUser.icon}</div>`}
                  </div>
                  <div>
-                    <div style="font-size: 0.75rem; color: rgba(255,255,255,0.7); font-weight: 700;">WELCOME</div>
+                    <div style="font-size: 0.75rem; color: rgba(255,255,255,0.7); font-weight: 700;">
+                        WELCOME <span style="font-weight:400; opacity:0.8; margin-left:5px;">v2.1</span>
+                    </div>
                     <div style="font-size: 1.2rem; font-weight: 900; color: white;">${currentUser.name}</div>
                  </div>
             </div>

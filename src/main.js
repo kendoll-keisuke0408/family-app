@@ -1,18 +1,23 @@
-// FORCE UNREGISTER SERVICE WORKER
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(function (registrations) {
-    for (let registration of registrations) {
-      registration.unregister();
-    }
-  });
-}
+// SAFE MODE START
+try {
+  // FORCE UNREGISTER SERVICE WORKER
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function (registrations) {
+      for (let registration of registrations) {
+        registration.unregister();
+      }
+    }).catch(e => console.log('SW clear error', e));
+  }
 
-// Fallback setup link for stale caches
-const setupLink = document.createElement('a');
-setupLink.href = './setup.html?v=' + Date.now();
-setupLink.innerText = '⚙️ 設定画面が出ない場合はこちら';
-setupLink.style.cssText = 'position:fixed; top:10px; left:10px; z-index:99999; font-size:0.8rem; background:#ffeb3b; padding:8px 12px; border-radius:30px; text-decoration:none; color:black; font-weight:bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3);';
-document.body.appendChild(setupLink);
+  // Fallback setup link
+  const setupLink = document.createElement('a');
+  setupLink.href = './setup.html?v=' + Date.now();
+  setupLink.innerText = '⚙️ 設定(緊急)';
+  setupLink.style.cssText = 'position:fixed; top:10px; left:10px; z-index:99999; font-size:0.8rem; background:#ffeb3b; padding:8px 12px; border-radius:30px; text-decoration:none; color:black; font-weight:bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3);';
+  document.body.appendChild(setupLink);
+} catch (e) {
+  console.error('Safety script error', e);
+}
 
 import './style.css'
 // In a real build, we'd import simple modules. For now we use the ones we touched.
@@ -26,7 +31,7 @@ import { render as renderSettings } from './components/Settings.js'
 import { render as renderLockScreen } from './components/LockScreen.js'
 
 const app = document.querySelector('#app')
-let isLocked = true // Default state: Locked
+let isLocked = true // Enable Lock Screen
 
 // Init Mobile Mode
 if (localStorage.getItem('family_app_mobile_mode') === 'true') {

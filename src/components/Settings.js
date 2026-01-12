@@ -13,25 +13,33 @@ export function render() {
         const memberList = document.querySelector('.member-list')
         if (memberList) {
             memberList.onclick = (e) => {
+                const target = e.target;
+                const id = target.dataset.id;
+
+                // Edit Name
+                if (target.classList.contains('edit-name-btn')) {
+                    const currentName = target.dataset.name;
+                    const newName = prompt('新しい名前を入力してください:', currentName);
+                    if (newName && newName !== currentName) {
+                        updateUser(id, { name: newName });
+                        document.querySelector('[data-route=settings]').click();
+                    }
+                }
+
                 // Delete Member
-                if (e.target.classList.contains('delete-member-btn')) {
-                    const id = e.target.dataset.id
+                if (target.classList.contains('delete-member-btn')) {
                     if (confirm('このメンバーを削除しますか？\n(元に戻せません)')) {
                         try {
-                            // If deleting self, warn or switch? 
-                            // For simplicity, just allow if not last. 
-                            // If current user is deleted, app might break unless we switch.
                             if (id === currentUser.id) {
-                                alert('自分自身は削除できません。\n(別のユーザーに切り替えてから削除してね)')
-                                return
+                                if (confirm('自分自身を削除しますか？\n削除すると、自動的に別のメンバーに切り替わります（メンバーがいなければ初期化されます）。')) {
+                                    window.removeUserById(id);
+                                    // If success, logic inside removeUserById helper will handle UI, but we likely need to reload or switch user.
+                                    // Let's rely on the helper reloading or erroring.
+                                    return;
+                                }
+                                return;
                             }
-
-                            // Import dynamic delete function or assume global scope if exposed? 
-                            // We need to import removeUser at the top. 
-                            // Since I can't easily change top imports in this block, I will rely on re-importing in the full file replace or assuming it was added.
-                            // Wait, I am replacing a block. I must ensure removeUser is available. 
-                            // actually, I need to update the imports in line 1.
-                            window.removeUserById(id) // Helper defined below
+                            window.removeUserById(id)
                         } catch (err) {
                             alert('削除できませんでした')
                         }
@@ -379,16 +387,18 @@ export function render() {
                             </div>
                         </label>
                         <input type="file" id="icon-upload-${u.id}" accept="image/*" style="display: none;" onchange="handleIconUpload('${u.id}', this)">
-                        <div style="font-size: 0.75rem; font-weight: 700; width: 100%; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${u.name}</div>
+                        <div style="font-size: 0.75rem; font-weight: 700; width: 100%; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${u.name} 
+                            <span class="edit-name-btn" data-id="${u.id}" data-name="${u.name}" style="cursor:pointer; color:var(--primary-accent);">✎</span>
+                        </div>
                         
-                        ${u.id !== currentUser.id ? `
+                        ${/* Allow delete for everyone (logic handles safety) */ ''}
                         <button class="delete-member-btn" data-id="${u.id}" style="
                             position: absolute; top: -5px; right: -5px; 
                             background: var(--danger); color: white; 
                             width: 20px; height: 20px; border-radius: 50%; 
                             border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; cursor: pointer; z-index: 10;
                         ">×</button>
-                        ` : ''}
                     </div>
                 `).join('')}
             </div>

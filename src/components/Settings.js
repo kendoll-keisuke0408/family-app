@@ -329,7 +329,7 @@ export function render() {
 
     return `
     <div class="settings-container fade-in">
-       <h2 style="margin-bottom: var(--space-md); text-align: center; color: var(--text-main);">設定・管理 ⚙️ <span style="font-size:0.8rem; color: var(--primary-accent); font-weight:bold;">v2.1 (NEW)</span></h2>
+       <h2 style="margin-bottom: var(--space-md); text-align: center; color: var(--text-main);">設定・管理 ⚙️</h2>
 
        <!-- My Account & Security -->
        <div class="glass-panel" style="padding: var(--space-md); margin-bottom: var(--space-md); border-top: 5px solid var(--primary-accent);">

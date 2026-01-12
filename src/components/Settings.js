@@ -383,7 +383,6 @@ export function render() {
                         <label for="icon-upload-${u.id}" style="cursor: pointer;">
                             <div style="width: 60px; height: 60px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; box-shadow: var(--shadow-sm); border: 3px solid ${u.id === currentUser.id ? 'var(--primary-accent)' : '#eee'}; overflow: hidden;">
                                 ${renderIcon(u.icon)}
-                                <div style="position: absolute; bottom: 0; right: 0; background: #333; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem;">📷</div>
                             </div>
                         </label>
                         <input type="file" id="icon-upload-${u.id}" accept="image/*" style="display: none;" onchange="handleIconUpload('${u.id}', this)">

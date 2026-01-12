@@ -154,24 +154,25 @@ export function render() {
                 const fileInput = document.querySelector('#new-member-photo')
                 const name = nameInput.value.trim()
 
-                if (name) {
-                    let icon = '👶' // Default
-                    if (fileInput.files && fileInput.files[0]) {
-                        try {
-                            icon = await processImage(fileInput.files[0], 150, 0.8)
-                        } catch (err) {
-                            console.error("Image upload failed", err)
-                        }
-                    } else {
-                        // Randomly select an icon from a list
-                        const icons = ['👶', '👦', '👧', '👵', '👴', '👱‍♂️', '👱‍♀️', '🐕', '🐈']
-                        icon = icons[Math.floor(Math.random() * icons.length)]
-                    }
-
-                    addUser(name, icon)
-                    alert(`${name}さんを追加しました！🎉\n(ログイン画面から切り替えられます)`)
-                    document.querySelector('[data-route=settings]').click()
+                if (!name) {
+                    alert('名前を入力してください')
+                    return
                 }
+
+                // Default to selected icon, or fallback to Baby
+                let icon = document.querySelector('input[name="selected-icon"]:checked')?.value || '👶';
+
+                if (fileInput.files && fileInput.files[0]) {
+                    try {
+                        icon = await processImage(fileInput.files[0], 150, 0.8)
+                    } catch (err) {
+                        console.error("Image upload failed", err)
+                    }
+                }
+
+                addUser(name, icon)
+                alert(`${name}さんを追加しました！🎉`)
+                document.querySelector('[data-route=settings]').click()
             }
         }
 
@@ -414,7 +415,23 @@ export function render() {
                     <span>📷 写真を選ぶ (任意)</span>
                     <input type="file" id="new-member-photo" accept="image/*">
                 </label>
+                
+                <div style="font-size: 0.8rem; color: #666;">またはアイコンを選択:</div>
+                <div id="icon-selector" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    ${['👶', '👦', '👧', '👨', '👩', '👴', '👵', '🐕', '🐈', '🧸', '🤖', '👽'].map(icon => `
+                        <label style="cursor: pointer;">
+                            <input type="radio" name="selected-icon" value="${icon}" style="display:none;" ${icon === '👶' ? 'checked' : ''}>
+                            <div class="icon-option" style="font-size: 1.5rem; padding: 5px; border: 2px solid transparent; border-radius: 5px; transition: all 0.2s;">${icon}</div>
+                        </label>
+                    `).join('')}
+                </div>
+                
                 <button id="add-member-btn" class="btn btn-primary" type="button" style="padding: 8px;">追加する</button>
+
+            <style>
+                .icon-option:hover { background: #eee; }
+                input[name="selected-icon"]:checked + .icon-option { border-color: var(--primary-accent); background: rgba(52, 152, 219, 0.1); transform: scale(1.1); }
+            </style>
             </div>
          </div>
 

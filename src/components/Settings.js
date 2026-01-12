@@ -147,12 +147,12 @@ export function render() {
         }
 
         // 2. Add Family Member
-        const addMemberForm = document.querySelector('#add-member-form')
-        if (addMemberForm) {
-            addMemberForm.onsubmit = async (e) => {
-                e.preventDefault()
-                const name = addMemberForm.querySelector('input[name="name"]').value
-                const fileInput = addMemberForm.querySelector('input[name="photo"]')
+        const addMemberBtn = document.querySelector('#add-member-btn')
+        if (addMemberBtn) {
+            addMemberBtn.onclick = async () => {
+                const nameInput = document.querySelector('#new-member-name')
+                const fileInput = document.querySelector('#new-member-photo')
+                const name = nameInput.value.trim()
 
                 if (name) {
                     let icon = '👶' // Default
@@ -407,14 +407,14 @@ export function render() {
          <!-- Add Member with Photo -->
          <div style="background: rgba(255,255,255,0.5); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
             <h4 style="font-size: 0.9rem; margin-bottom: 10px;">メンバーを追加</h4>
-            <form id="add-member-form" style="display: flex; flex-direction: column; gap: 10px;">
-                <input type="text" name="name" placeholder="名前 (例: ポチ)" required style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            <div id="add-member-container" style="display: flex; flex-direction: column; gap: 10px;">
+                <input type="text" id="new-member-name" placeholder="名前 (例: ポチ)" style="padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                 <label style="font-size: 0.8rem; color: #666; display: flex; align-items: center; gap: 5px; cursor: pointer;">
                     <span>📷 写真を選ぶ (任意)</span>
-                    <input type="file" name="photo" accept="image/*">
+                    <input type="file" id="new-member-photo" accept="image/*">
                 </label>
-                <button type="submit" class="btn btn-primary" style="padding: 8px;">追加する</button>
-            </form>
+                <button id="add-member-btn" class="btn btn-primary" type="button" style="padding: 8px;">追加する</button>
+            </div>
          </div>
 
          <button id="invite-btn" class="btn" style="width: 100%; background: white; color: var(--secondary-accent); border: 2px solid var(--secondary-accent);">

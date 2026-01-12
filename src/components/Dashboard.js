@@ -99,7 +99,7 @@ export function render() {
                  </div>
                  <div>
                     <div style="font-size: 0.75rem; color: rgba(255,255,255,0.7); font-weight: 700;">
-                        WELCOME <span style="font-weight:400; opacity:0.8; margin-left:5px;">v2.1</span>
+                        WELCOME <span style="font-weight:400; opacity:0.8; margin-left:5px; color:#ffd700;">v2.2 (FINAL)</span>
                     </div>
                     <div style="font-size: 1.2rem; font-weight: 900; color: white;">${currentUser.name}</div>
                  </div>

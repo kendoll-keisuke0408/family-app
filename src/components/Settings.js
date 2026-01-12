@@ -389,7 +389,9 @@ export function render() {
                         <input type="file" id="icon-upload-${u.id}" accept="image/*" style="display: none;" onchange="handleIconUpload('${u.id}', this)">
                         <div style="font-size: 0.75rem; font-weight: 700; width: 100%; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                             ${u.name} 
-                            <span class="edit-name-btn" data-id="${u.id}" data-name="${u.name}" style="cursor:pointer; color:var(--primary-accent);">✎</span>
+                            <button class="edit-name-btn" data-id="${u.id}" data-name="${u.name}" style="
+                                cursor:pointer; background:none; border:none; font-size:1rem; margin-left:2px; padding:0;
+                            ">✏️</button>
                         </div>
                         
                         ${/* Allow delete for everyone (logic handles safety) */ ''}
